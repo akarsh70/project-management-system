@@ -1,0 +1,81 @@
+# Global settings
+global:
+  namespace: project-management
+  imageRegistry: ghcr.io/your-org/project-management
+
+# Backend configuration
+backend:
+  image:
+    repository: backend
+    tag: latest
+    pullPolicy: Always
+  replicas: 2
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    NODE_ENV: production
+    PORT: "3000"
+    DB_SYNC: "false"
+  service:
+    type: ClusterIP
+    port: 3000
+
+# Frontend configuration
+frontend:
+  image:
+    repository: frontend
+    tag: latest
+    pullPolicy: Always
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  service:
+    type: ClusterIP
+    port: 80
+
+# Ingress
+ingress:
+  enabled: true
+  className: nginx
+  host: projecthub.example.com
+  tls:
+    enabled: true
+    secretName: pms-tls
+
+# PostgreSQL (using Bitnami chart)
+postgresql:
+  enabled: true
+  auth:
+    database: project_management
+    username: postgres
+    existingSecret: postgresql-secrets
+  primary:
+    persistence:
+      size: 10Gi
+
+# Redis (using Bitnami chart)
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    existingSecret: redis-secrets
+  master:
+    persistence:
+      size: 2Gi
+
+# Secrets (override in production!)
+secrets:
+  jwtSecret: "CHANGE_IN_PRODUCTION"
+  jwtRefreshSecret: "CHANGE_IN_PRODUCTION"
+  dbPassword: "CHANGE_IN_PRODUCTION"
+  redisPassword: "CHANGE_IN_PRODUCTION"

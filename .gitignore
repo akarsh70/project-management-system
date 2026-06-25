@@ -1,0 +1,38 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Environment (NEVER commit real .env)
+.env
+.env.local
+.env.production
+
+# Node
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Docker volumes (local)
+postgres_data/
+redis_data/
+
+# Redis dump
+dump.rdb
+
+# SSL certs
+nginx/ssl/*.crt
+nginx/ssl/*.key
+nginx/ssl/*.pem

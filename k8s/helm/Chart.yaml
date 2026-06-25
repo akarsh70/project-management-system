@@ -1,0 +1,13 @@
+apiVersion: v2
+name: project-management
+description: Multi-tenant Project Management SaaS Helm Chart
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - project-management
+  - saas
+  - multi-tenant
+maintainers:
+  - name: Platform Team
+    email: platform@example.com
