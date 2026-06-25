@@ -1,8 +1,8 @@
-# System Architecture — Hindlish mein
+# System Architecture
 
 ## Overview
 
-ProjectHub ek **layered monolith** architecture follow karta hai jo microservice-ready hai. Matlab abhi sab kuch ek NestJS process mein hai, lekin modules itne clean hain ki future mein alag services mein split karna possible hai bina business logic change kiye.
+ProjectHub follows a **layered monolith** architecture designed to be microservice-ready. The entire application runs as a single NestJS process, but module boundaries are clean enough to extract individual services in the future without changing business logic.
 
 ---
 
@@ -67,7 +67,7 @@ ProjectHub ek **layered monolith** architecture follow karta hai jo microservice
 
 ## Request Lifecycle
 
-Ek typical authenticated API request ka flow:
+A typical authenticated API request flows as follows:
 
 ```
 1. Browser → POST /api/v1/organizations/org-id/projects
@@ -77,26 +77,26 @@ Ek typical authenticated API request ka flow:
 2. Nginx → Rate limit check → Pass to NestJS
 
 3. NestJS Pipeline:
-   a. CorrelationIdMiddleware    → x-correlation-id header add karo
-   b. LoggingInterceptor        → Request log karo (method, url, timing)
-   c. JwtAuthGuard              → Token verify → user load from DB
-   d. RolesGuard                → memberships table check → role validate
-   e. ValidationPipe            → DTO validate (whitelist + transform)
-   f. ProjectsController        → Route handler call
-   g. ProjectsService           → Business logic
+   a. CorrelationIdMiddleware    → Attach x-correlation-id header
+   b. LoggingInterceptor        → Log request (method, url, timing)
+   c. JwtAuthGuard              → Verify token → Load user from DB
+   d. RolesGuard                → Check memberships table → Validate role
+   e. ValidationPipe            → Validate DTO (whitelist + transform)
+   f. ProjectsController        → Call route handler
+   g. ProjectsService           → Execute business logic
       → Redis get('projects:org-id')  → MISS
       → PostgreSQL query (organization_id = org-id)
       → Redis set('projects:org-id', data, 300s)
       → BullMQ.add('project-events', 'project-created', {...})
-   h. TransformInterceptor      → { success: true, data: {...} } wrap
+   h. TransformInterceptor      → Wrap as { success: true, data: {...} }
 
 4. BullMQ (async, after response):
    → NotificationService.createForAllMembers(...)
-   → AuditLog save to PostgreSQL
+   → AuditLog saved to PostgreSQL
 
 5. Socket.IO (async):
    → server.to('org:org-id').emit('project_created', data)
-   → All connected org members ko real-time update
+   → Real-time update delivered to all connected org members
 ```
 
 ---
@@ -126,7 +126,7 @@ modules/
 │
 ├── memberships/        # RBAC roles
 │   ├── dto/
-│   ├── memberships.service.ts  # Last-admin protection here
+│   ├── memberships.service.ts  # Last-admin protection
 │   └── memberships.controller.ts
 │
 ├── projects/           # Projects CRUD
@@ -136,7 +136,7 @@ modules/
 │
 ├── tasks/              # Tasks CRUD (Kanban)
 │   ├── dto/
-│   ├── tasks.service.ts      # RBAC service-level check
+│   ├── tasks.service.ts      # Service-level RBAC checks
 │   └── tasks.controller.ts
 │
 ├── notifications/      # In-app notifications
@@ -175,7 +175,7 @@ modules/
 
 ---
 
-## Authentication Flow (Detail)
+## Authentication Flow
 
 ```mermaid
 sequenceDiagram
@@ -200,7 +200,7 @@ sequenceDiagram
     API->>API: sha256(rawToken) → hash
     API->>DB: SELECT WHERE tokenHash=hash AND isRevoked=false AND expiresAt>NOW()
     DB-->>API: RefreshToken record ✅
-    API->>DB: UPDATE SET isRevoked=true (old token revoke)
+    API->>DB: UPDATE SET isRevoked=true (revoke old token)
     API->>API: Generate new accessToken + new refreshToken
     API->>DB: INSERT new refresh_token
     API-->>C: {accessToken: new, refreshToken: new}
@@ -270,10 +270,10 @@ Log format:
 
 ## SSO-Ready Design
 
-Current architecture mein naya identity provider add karna bahut aasaan hai:
+The Passport.js strategy pattern makes adding a new identity provider straightforward:
 
 ```typescript
-// Step 1: Naya Passport strategy banao
+// Step 1: Create a new Passport strategy
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(private authService: AuthService) {
@@ -296,10 +296,10 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   }
 }
 
-// Step 2: AuthModule mein register karo
+// Step 2: Register in AuthModule
 providers: [..., GoogleStrategy],
 
-// Step 3: Controller mein endpoint add karo
+// Step 3: Add endpoints in the controller
 @Get('google')
 @UseGuards(AuthGuard('google'))
 googleLogin() {}
@@ -311,4 +311,4 @@ googleCallback(@CurrentUser() user: User) {
 }
 ```
 
-**SAML/OIDC ke liye bhi same pattern** — sirf `passport-saml` ya `passport-openidconnect` install karo.
+The same pattern applies for **SAML/OIDC** — install `passport-saml` or `passport-openidconnect` and implement the corresponding strategy class.

@@ -1,15 +1,15 @@
 # ProjectHub — Multi-Tenant Project Management SaaS
 
-> **Full Stack Engineer Assessment** ke liye banaya gaya ek production-grade SaaS application.
+> A production-grade SaaS application built as a Full Stack Engineer Assessment.
 
-## Project Kya Hai?
+## Overview
 
-**ProjectHub** ek multi-tenant project management tool hai jahan:
-- Alag-alag companies (organizations) apne projects aur tasks manage karti hain
-- Har company ka data fully isolated rehta hai (multi-tenancy)
-- Ek user kai organizations mein alag roles ke saath kaam kar sakta hai
-- Real-time updates Socket.IO se milte hain
-- Offline draft saving IndexedDB se hoti hai
+**ProjectHub** is a multi-tenant project management platform where:
+- Multiple companies (organizations) manage their projects and tasks independently
+- Each organization's data is fully isolated (multi-tenancy)
+- A single user can belong to multiple organizations with different roles
+- Real-time updates are delivered via Socket.IO
+- Offline draft saving is supported via IndexedDB
 
 ---
 
@@ -37,21 +37,21 @@
 
 ---
 
-## Quick Start (Docker Compose — Sabse Aasaan)
+## Quick Start (Docker Compose — Recommended)
 
 ```bash
-# 1. Repo clone karo
+# 1. Clone the repository
 git clone https://github.com/akarsh70/project-management-system.git
 cd project-management-system
 
-# 2. Environment variables setup karo
+# 2. Set up environment variables
 cp backend/.env.example backend/.env
-# .env mein apni values daalo (default dev values already hain)
+# Default dev values are already configured
 
-# 3. Sab kuch ek command se start karo
+# 3. Start everything with a single command
 docker-compose up --build
 
-# 4. Browser mein access karo:
+# 4. Access in your browser:
 # Frontend App:   http://localhost
 # API:            http://localhost:3000/api/v1
 # Swagger Docs:   http://localhost:3000/api/docs
@@ -61,35 +61,35 @@ docker-compose up --build
 
 ## Local Development
 
-### Prerequisites (Zaruri cheezein)
+### Prerequisites
 
 ```bash
-node -v   # 20+ chahiye
-npm -v    # 10+ chahiye
+node -v   # 20+ required
+npm -v    # 10+ required
 psql -V   # PostgreSQL 16
 redis-cli -v  # Redis 7
 ```
 
-### Backend Start
+### Backend
 
 ```bash
 cd backend
 npm install
 
-# Environment file
+# Set up environment file
 cp .env.example .env
-# .env mein DB credentials, JWT secrets etc. daalo
+# Configure DB credentials, JWT secrets, etc.
 
-# Database migrations
+# Run database migrations
 npm run migration:run
 
-# Development server (with hot reload)
+# Start development server (with hot reload)
 npm run start:dev
 # → http://localhost:3000/api/v1
 # → Swagger: http://localhost:3000/api/docs
 ```
 
-### Frontend Start
+### Frontend
 
 ```bash
 cd frontend
@@ -107,10 +107,10 @@ npm run dev
 project-management-system/
 ├── backend/                         # NestJS API Server
 │   ├── src/
-│   │   ├── config/                  # App, DB, JWT, Redis configs
+│   │   ├── config/                  # App, DB, JWT, Redis configuration
 │   │   ├── database/
 │   │   │   ├── entities/            # 8 TypeORM entities (DB tables)
-│   │   │   ├── migrations/          # DB migration files
+│   │   │   ├── migrations/          # Database migration files
 │   │   │   └── seeds/               # Demo data seeder
 │   │   └── modules/
 │   │       ├── auth/                # JWT auth + refresh tokens + guards
@@ -118,7 +118,7 @@ project-management-system/
 │   │       ├── organizations/       # Organization CRUD
 │   │       ├── memberships/         # RBAC roles management
 │   │       ├── projects/            # Projects CRUD + Redis cache
-│   │       ├── tasks/               # Tasks CRUD + Kanban logic
+│   │       ├── tasks/               # Tasks CRUD + assignment logic
 │   │       ├── notifications/       # In-app notifications
 │   │       ├── payments/            # Payment abstraction (Strategy pattern)
 │   │       ├── redis/               # Cache service (ioredis wrapper)
@@ -128,17 +128,17 @@ project-management-system/
 │   │       └── common/              # Decorators, guards, filters, interceptors
 │   ├── test/
 │   │   ├── unit/                    # Jest unit tests
-│   │   └── integration/             # Supertest e2e tests
+│   │   └── integration/             # Supertest integration tests
 │   ├── .env.example                 # Environment variables template
 │   └── package.json
 │
 ├── frontend/                        # React + Vite Application
 │   ├── src/
-│   │   ├── api/                     # Axios client + React Query hooks
+│   │   ├── api/                     # Axios client + API functions
 │   │   ├── components/
 │   │   │   ├── common/              # ProtectedRoute, ErrorBoundary, etc.
 │   │   │   └── layout/              # Sidebar, Header, OrgSwitcher
-│   │   ├── hooks/                   # useSocket, useAuth custom hooks
+│   │   ├── hooks/                   # useSocket, useAuth, custom hooks
 │   │   ├── pages/                   # Route pages (Login, Dashboard, etc.)
 │   │   ├── store/                   # Redux Toolkit slices
 │   │   ├── theme/                   # MUI light/dark theme
@@ -157,9 +157,9 @@ project-management-system/
 │   ├── deployments/
 │   └── helm/                        # Helm chart for easy deployment
 │
-├── docs/                            # Detailed documentation (Hindlish)
-├── .github/workflows/               # GitHub Actions CI/CD
-└── docker-compose.yml               # Full stack dev/staging setup
+├── docs/                            # Detailed technical documentation
+├── .github/workflows/               # GitHub Actions CI/CD pipeline
+└── docker-compose.yml               # Full stack development setup
 ```
 
 ---
@@ -168,39 +168,39 @@ project-management-system/
 
 ### 1. Multi-Tenancy: Shared Database + organization_id
 
-**Kya choose kiya:** Har table mein `organization_id` column hai. Application layer par isolation.
+**Approach:** Every tenant-scoped table includes an `organization_id` column. Isolation is enforced at the application layer via `RolesGuard`.
 
-**Kyun:** Simple to implement, cost-effective. Separate database/schema per tenant expensive aur complex hota hai.
+**Rationale:** Simpler to implement and cost-effective. Separate databases per tenant introduce significant operational complexity.
 
-**Alternative:** PostgreSQL RLS (Row Level Security) — database level isolation. Docs mein documented hai, production mein recommended.
+**Production Enhancement:** PostgreSQL Row Level Security (RLS) can be added as a second layer of defense — fully documented in `docs/DATABASE.md`.
 
-**Trade-off:** Har query mein `organization_id` filter lagana padta hai — RolesGuard ensure karta hai.
+**Trade-off:** Every query must include an `organization_id` filter — the `RolesGuard` enforces this contract.
 
 ### 2. JWT: Short Access + Long Refresh + Token Rotation
 
-**Kya choose kiya:** Access token 15min, Refresh token 7 days, rotation on each refresh.
+**Approach:** 15-minute access tokens, 7-day refresh tokens with rotation on each use.
 
-**Kyun:** Short access token = security. Long refresh token = UX (silent renewal). Token rotation = refresh token theft ka risk kam.
+**Rationale:** Short-lived access tokens minimize exposure if stolen. Refresh token rotation ensures that a stolen refresh token is detected on the next legitimate use.
 
-**Alternative:** Session-based auth (stateful, simpler) — lekin horizontal scaling mein problem.
+**Alternative:** Session-based auth (simpler but problematic for horizontal scaling).
 
-### 3. Redis: Cache-Aside + BullMQ
+### 3. Redis: Cache-Aside Pattern + BullMQ
 
-**Kya choose kiya:** Projects cache (300s TTL), BullMQ for async notifications/audit.
+**Approach:** Project lists cached with 300s TTL; notifications and audit logs processed asynchronously via BullMQ.
 
-**Kyun:** Projects frequently read hote hain. Notifications + audit synchronous karte to request slow hoti.
+**Rationale:** Projects are frequently read with low write frequency. Processing notifications synchronously would add significant latency to API responses.
 
 ### 4. Socket.IO: Organization Rooms
 
-**Kya choose kiya:** `org:{orgId}` named rooms.
+**Approach:** Named rooms following the pattern `org:{orgId}`.
 
-**Kyun:** Perfect tenant isolation — Org A ke events Org B ko nahi milenge.
+**Rationale:** Provides perfect tenant isolation — events from Organization A are never delivered to members of Organization B.
 
-### 5. Payment: Strategy Pattern Interface
+### 5. Payment: Strategy Pattern
 
-**Kya choose kiya:** `IPaymentProvider` interface + `MockPaymentProvider` for dev.
+**Approach:** `IPaymentProvider` interface with `MockPaymentProvider` for development.
 
-**Kyun:** Business logic same rahega jab Stripe/Razorpay add karo. Sirf provider class swap karo.
+**Rationale:** Swapping to Stripe or Razorpay in production requires changing a single line in `payments.module.ts`. All business logic remains unchanged.
 
 ---
 
@@ -208,14 +208,14 @@ project-management-system/
 
 | Action | ADMIN | EDITOR | VIEWER |
 |--------|-------|--------|--------|
-| Org Settings | ✅ | ❌ | ❌ |
-| Add Members | ✅ | ❌ | ❌ |
+| Organization Settings | ✅ | ❌ | ❌ |
+| Add / Remove Members | ✅ | ❌ | ❌ |
 | Create Projects | ✅ | ✅ | ❌ |
 | Edit Own Projects | ✅ | ✅ | ❌ |
 | Edit Others' Projects | ✅ | ❌ | ❌ |
 | Create Tasks | ✅ | ✅ | ❌ |
 | View All | ✅ | ✅ | ✅ |
-| Audit Logs | ✅ | ❌ | ❌ |
+| View Audit Logs | ✅ | ❌ | ❌ |
 
 ---
 
@@ -228,12 +228,12 @@ cd backend && npm test
 # Backend: Coverage report
 cd backend && npm run test:cov
 
-# Backend: Integration tests (needs running DB + Redis)
+# Backend: Integration tests (requires running DB + Redis)
 cd backend && npm run test:e2e
 
-# Frontend: E2E tests (needs running app)
+# Frontend: E2E tests (requires running app)
 cd frontend
-npx playwright install  # First time setup
+npx playwright install  # First-time setup
 npm run test:e2e
 ```
 
@@ -241,9 +241,9 @@ npm run test:e2e
 
 ## API Documentation
 
-Swagger UI available at: **http://localhost:3000/api/docs**
+Swagger UI is available at: **http://localhost:3000/api/docs**
 
-Saare endpoints documented hain with:
+All endpoints are documented with:
 - Request body schemas
 - Response shapes
 - Authentication requirements
@@ -253,43 +253,41 @@ Saare endpoints documented hain with:
 
 ## Bonus Features
 
-Assessment mein requested extra features:
+Additional features implemented beyond core requirements:
 
 - ✅ **PostgreSQL RLS** — documented in `docs/DATABASE.md`
-- ✅ **Fine-grained RBAC** — role hierarchy with service-level checks
-- ✅ **Async Audit Logging** — BullMQ queue se async write
-- ✅ **Rate Limiting** — NestJS Throttler + Nginx dual layer
-- ✅ **WebSocket Presence** — Redis HSET se online users track
-- ✅ **OpenTelemetry** — configured in `main.ts`
-- ✅ **Offline Drafts** — IndexedDB (`idb` library) for form drafts
+- ✅ **Fine-grained RBAC** — role hierarchy with service-level ownership checks
+- ✅ **Async Audit Logging** — written via BullMQ queue (non-blocking)
+- ✅ **Rate Limiting** — NestJS Throttler + Nginx dual-layer protection
+- ✅ **WebSocket Presence** — online user tracking via Redis HSET
+- ✅ **OpenTelemetry** — distributed tracing configured in `main.ts`
+- ✅ **Offline Drafts** — IndexedDB (`idb` library) for form draft persistence
 - ✅ **Kubernetes + Helm** — production-ready manifests
-- ✅ **SSO-Ready** — Passport.js strategy pattern documented
-- ✅ **Vault/KMS** — integration documented in `docs/SECURITY.md`
+- ✅ **SSO-Ready** — Passport.js strategy pattern documented for SAML/OIDC/Google
+- ✅ **Vault/KMS** — secrets management integration documented in `docs/SECURITY.md`
 
 ---
 
 ## Documentation
 
-Detailed docs in `docs/` folder (Hindlish mein):
-
 | File | Content |
 |------|---------|
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, request flow, diagrams |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, request flow, module structure |
 | [DATABASE.md](docs/DATABASE.md) | Schema, ERD, indexes, RLS |
 | [AUTH.md](docs/AUTH.md) | JWT flow, refresh tokens, SSO |
 | [MULTITENANCY.md](docs/MULTITENANCY.md) | Tenant isolation strategy |
 | [RBAC.md](docs/RBAC.md) | Roles, permissions matrix |
 | [REDIS.md](docs/REDIS.md) | Cache strategy, TTL decisions |
 | [BULLMQ.md](docs/BULLMQ.md) | Queue architecture, retry logic |
-| [WEBSOCKET.md](docs/WEBSOCKET.md) | Socket.IO rooms, presence |
+| [WEBSOCKET.md](docs/WEBSOCKET.md) | Socket.IO rooms, presence tracking |
 | [PAYMENTS.md](docs/PAYMENTS.md) | Abstraction layer, adding providers |
 | [SECURITY.md](docs/SECURITY.md) | JWT, bcrypt, RBAC, Vault/KMS |
-| [OBSERVABILITY.md](docs/OBSERVABILITY.md) | OpenTelemetry, Prometheus |
-| [TESTING.md](docs/TESTING.md) | Jest + Playwright strategy |
-| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Docker + K8s deployment guide |
+| [OBSERVABILITY.md](docs/OBSERVABILITY.md) | OpenTelemetry, Prometheus, Grafana |
+| [TESTING.md](docs/TESTING.md) | Jest + Playwright testing strategy |
+| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Docker + Kubernetes deployment guide |
 | [CI_CD.md](docs/CI_CD.md) | GitHub Actions pipeline |
 | [API.md](docs/API.md) | OpenAPI reference guide |
 
 ---
 
-*Built as Full Stack Engineer Assessment — Enterprise-grade multi-tenant SaaS*
+*Built as a Full Stack Engineer Assessment — Enterprise-grade multi-tenant SaaS*
